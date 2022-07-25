@@ -21,11 +21,14 @@ class Page
     #[ORM\Column(type: 'text')]
     private $body;
 
+    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'pages')]
+    private $category;
+
     #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'pages')]
     private $tags;
 
-    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'pages')]
-    private $category;
+    #[ORM\ManyToOne(targetEntity: Writer::class, inversedBy: 'pages')]
+    private $writer;
 
     public function __construct()
     {
@@ -61,6 +64,18 @@ class Page
         return $this;
     }
 
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): self
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Tag>
      */
@@ -85,14 +100,14 @@ class Page
         return $this;
     }
 
-    public function getCategory(): ?Category
+    public function getWriter(): ?Writer
     {
-        return $this->category;
+        return $this->writer;
     }
 
-    public function setCategory(?Category $category): self
+    public function setWriter(?Writer $writer): self
     {
-        $this->category = $category;
+        $this->writer = $writer;
 
         return $this;
     }
