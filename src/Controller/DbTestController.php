@@ -2,10 +2,15 @@
 
 namespace App\Controller;
 
+use DateTime;
 use App\Entity\Article;
 use App\Entity\Category;
 use App\Entity\Page;
 use App\Entity\Tag;
+use App\Repository\ArticleRepository;
+use App\Repository\EditorRepository;
+use App\Repository\UserRepository;
+use App\Repository\WriterRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -117,27 +122,49 @@ class DbTestController extends AbstractController
         $articles = $articleRepository->findByKeyword('plat');
         dump($articles);
 
-        $writer = $writerRepository->find(1);
+        $writer = $writerRepository->find(6);
         $user = $writer->getUser();
         // force doctrine à lancer le lazy loading
         $user->getEmail();
         dump($user);
 
-        $editor = $editorRepository->find(1);
+        $editor = $editorRepository->find(6);
         $user = $editor->getUser();
         // force doctrine à lancer le lazy loading
         $user->getEmail();
         dump($user);
 
-        $user1 = $userRepository->find(1);
+        $user1 = $userRepository->find(11);
         // force doctrine à lancer le lazy loading
         $user1->getEmail();
         dump($user1);
 
-        $user2 = $userRepository->find(2);
+        $user2 = $userRepository->find(12);
         // force doctrine à lancer le lazy loading
         $user2->getEmail();
         dump($user2);
+
+        $editor = $editorRepository->findByUser($user1);
+        dump($editor);
+        $editor = $editorRepository->findByUser($user2);
+        dump($editor);
+
+        $writer = $writerRepository->findByUser($user1);
+        dump($writer);
+        $writer = $writerRepository->findByUser($user2);
+        dump($writer);
+
+        $role = 'ROLE_WRITER';
+        $users = $userRepository->findByRole($role);
+        dump($users);
+
+        $articles = $articleRepository->findByPublishedAtIsNull();
+        dump($articles);
+
+        $date = DateTime::createFromFormat('Y-m-d H:i:s', '2022-06-30 00:00:00');
+        dump($date);
+        $articles = $articleRepository->findByPublishedAtBefore($date);
+        dump($articles);
 
         exit();
     }

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Editor;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,6 +17,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EditorRepository extends ServiceEntityRepository
 {
+    use ProfileTrait;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Editor::class);
@@ -37,6 +40,11 @@ class EditorRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function findByUser(User $user): ?Editor
+    {
+        return $this->__findByUser($user);
     }
 
 //    /**
