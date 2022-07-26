@@ -2,6 +2,8 @@
 
 namespace App\Security;
 
+use App\Repository\WriterRepository;
+use App\Repository\EditorRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,10 +24,15 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
     public const LOGIN_ROUTE = 'app_login';
 
     private UrlGeneratorInterface $urlGenerator;
+    private WriterRepository $writerRepository;
+    private EditorRepository $editorRepository;
 
-    public function __construct(UrlGeneratorInterface $urlGenerator)
+
+    public function __construct(UrlGeneratorInterface $urlGenerator, WriterRepository $writerRepository, EditorRepository $editorRepository)
     {
         $this->urlGenerator = $urlGenerator;
+        $this->editorRepository = $editorRepository;
+        $this->writerRepository = $writerRepository;
     }
 
     public function authenticate(Request $request): Passport
@@ -63,10 +70,24 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         // $roles = $token->getRoleNames();
         
         if (in_array('ROLE_EDITOR', $roles)){
+            $editor = $this->editorRepository->findByUser($user);
+            dump($editor);
+            exit();
+            // il est possible de récupérer des informations sur le profil
+            // $id = $editor->getId();
+
             return new RedirectResponse($this->urlGenerator->generate('api_entrypoint'));
+        } elseif (in_array('ROLE_WRITER', $roles)){
+            $writer = $this->writerRepository->findByUser($user);
+            dump($writer);
+            exit();
+            // il est possible de récupérer des informations sur le profil
+            // $articles = $editor->getArticles();
+
+            return new RedirectResponse($this->urlGenerator->generate('app_db_test_fixtures'));
         }
 
-        
+        // la redirection par défault pour les utilisateur qui ont que le roles 'ROLE_USER'
         return new RedirectResponse($this->urlGenerator->generate('app_db_test_fixtures'));
 
         exit();
