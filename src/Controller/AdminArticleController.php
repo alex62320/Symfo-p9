@@ -3,21 +3,47 @@
 namespace App\Controller;
 
 use App\Entity\Article;
+use App\Entity\Writer;
+use App\Repository\WriterRepositoy;
 use App\Form\ArticleType;
 use App\Repository\ArticleRepository;
+use App\Repository\WriterRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 #[Route('/admin/article')]
 class AdminArticleController extends AbstractController
 {
+
+    private WriterRepository $writerRepository;
+
+    public function __construct(WriterRepository $writerRepository)
+    {
+        $this->writerRepository = $writerRepository;
+    } 
+
     #[Route('/', name: 'app_admin_article_index', methods: ['GET'])]
     public function index(ArticleRepository $articleRepository): Response
     {
+        $user = $this->getUser();
+
+        // les utilisateur non identifier sont renvoyé a la page de login
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $articles = [];
+
+         if ($this->isGranted('ROLE_EDITOR')) {
+            $articles = $articleRepository->findAll();
+         }elseif ($this->isGranted('ROLE_WRITER')){
+            $writer = $this->writerRepository->findByUser($user);
+            $articles = $writer->getArticles();
+         }
+
         return $this->render('admin_article/index.html.twig', [
-            'articles' => $articleRepository->findAll(),
+            'articles' => $articles,
         ]);
     }
 
@@ -43,6 +69,25 @@ class AdminArticleController extends AbstractController
     #[Route('/{id}', name: 'app_admin_article_show', methods: ['GET'])]
     public function show(Article $article): Response
     {
+        // les utilisateur non identifier sont renvoyé a la page de login
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
+
+        if (!$this->isGranted('ROLE_EDITOR'))
+        {
+            if ($this->isGranted('ROLE_WRITER')){
+                $user = $this->getUser();
+                $writer = $this->writerRepository->findByUser($user);
+                $articles = $writer->getArticles();
+                if (!$articles->contains($article)){
+                    // le redeacteur c'est pas le proprietaire de l'article
+                    throw new AccessDeniedException();
+                }
+            }else {
+                // l'utilisateur n'est n'y un editeur ou un redacteur
+                throw new AccessDeniedException();
+            }
+        }
+
         return $this->render('admin_article/show.html.twig', [
             'article' => $article,
         ]);
@@ -53,6 +98,9 @@ class AdminArticleController extends AbstractController
     {
         $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
+
+        // les utilisateur non identifier sont renvoyé a la page de login
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         if ($form->isSubmitted() && $form->isValid()) {
             $articleRepository->add($article, true);

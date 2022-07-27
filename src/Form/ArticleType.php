@@ -2,8 +2,8 @@
 
 namespace App\Form;
 
-use App\Entity\Tag;
 use App\Entity\Article;
+use App\Entity\Tag;
 use App\Entity\Category;
 use App\Entity\Writer;
 use Doctrine\ORM\EntityRepository;
@@ -13,77 +13,89 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-
 class ArticleType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('title', TextType::class, [
+            ->add('title', TextType::class,[
                 'label_attr' => [
-                    'class' => 'test-de-classe'
+                    'class' => 'test-classe-label',
                 ],
-                'attr' => [
-                    'class' => 'test-classe-input'
+                'attr'=> [
+                    'class' => 'test-classe-div'
                 ],
                 'row_attr' => [
                     'class' => 'test-classe-div'
-                ]
+                ],
             ])
             ->add('body')
             ->add('published_at')
             ->add('tags', EntityType::class, [
                 // looks for choices from this entity
                 'class' => Tag::class,
-                'query_builder' => function (EntityRepository $er) {
-                    return $er->createQueryBuilder('u')
-                        ->orderBy('u.name', 'ASC');
-                },
             
                 // uses the User.username property as the visible option string
-                'choice_label' => 'name',
-                
+                'choice_label' => function (Tag $tag){
+                    return "{$tag->getName()} ({$tag->getId()}";
+                },
+            
                 // used to render a select box, check boxes or radios
                 'multiple' => true,
                 'expanded' => true,
 
                 'by_reference' => false,
 
-                'attr' => [
-                    // ajout d'une classe a la div des tag
-                    'class' => 'checkboxes-with-scroll',
+                'query_builder' => function (EntityRepository $er) {
+                    return $er->createQueryBuilder('t')
+                        ->orderBy('t.name', 'ASC');
+                },
+
+                'attr' =>[
+                    'class' => 'checkbox-widht-scroll',
                 ]
             ])
             ->add('category', EntityType::class, [
                 // looks for choices from this entity
                 'class' => Category::class,
-            
+
                 // uses the User.username property as the visible option string
                 'choice_label' => 'name',
+
+                // used to render a select box, check boxes or radios
+                // 'multiple' => true,
+                // 'expanded' => true,
                 'query_builder' => function (EntityRepository $er) {
                     return $er->createQueryBuilder('c')
                         ->orderBy('c.name', 'ASC');
                 },
-                // used to render a select box, check boxes or radios
-                // 'multiple' => true,
-                // 'expanded' => true,
+                'attr' =>[
+                    'class' => 'radios-widht-scroll',
+                ]
             ])
             ->add('writer', EntityType::class, [
                 // looks for choices from this entity
                 'class' => Writer::class,
+            
+                // uses the User.username property as the visible option string
+                'choice_label' => function (Writer $object){
+                    return "{$object->getUser()->getEmail()} ({$object->getUser()->getId()}";
+                },
+            
+                // used to render a select box, check boxes or radios
+                // 'multiple' => true,
+                'expanded' => true,
+
+                'by_reference' => false,
+
                 'query_builder' => function (EntityRepository $er) {
                     return $er->createQueryBuilder('w')
                         ->join('w.user', 'u')
                         ->orderBy('u.email', 'ASC');
                 },
-                // uses the User.username property as the visible option string
-                'choice_label' => function (Writer $object){
-                    return "{$object->getUser()->getEmail()} ({$object->getUser()->getEmail()})";
-                },
-            
-                // used to render a select box, check boxes or radios
-                // 'multiple' => true,
-                // 'expanded' => true,
+                'attr' =>[
+                    'class' => 'radios-widht-scroll',
+                ]
             ])
         ;
     }
