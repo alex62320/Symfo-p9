@@ -50,6 +50,22 @@ class AdminArticleController extends AbstractController
     #[Route('/new', name: 'app_admin_article_new', methods: ['GET', 'POST'])]
     public function new(Request $request, ArticleRepository $articleRepository): Response
     {
+        // les utilisateur non identifier sont renvoyé a la page de login
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
+
+        // méthode alternative à la méthode denyAccesUnlessGaranted
+        // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
+        //     throw new AccessDeniedException();
+        // }
+        
+        if (!$this->isGranted('ROLE_EDITOR')&& !$this->isGranted('ROLE_WRITER')){
+            // le redeacteur c'est pas le proprietaire de l'article
+            throw new AccessDeniedException();
+            // genere une erreur 404
+            // throw $this->createNotFoundException('The product does not exist');
+        }
+    
+
         $article = new Article();
         $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
@@ -72,19 +88,22 @@ class AdminArticleController extends AbstractController
         // les utilisateur non identifier sont renvoyé a la page de login
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
 
-        if (!$this->isGranted('ROLE_EDITOR'))
-        {
-            if ($this->isGranted('ROLE_WRITER')){
-                $user = $this->getUser();
-                $writer = $this->writerRepository->findByUser($user);
-                $articles = $writer->getArticles();
-                if (!$articles->contains($article)){
-                    // le redeacteur c'est pas le proprietaire de l'article
-                    throw new AccessDeniedException();
-                }
-            }else {
-                // l'utilisateur n'est n'y un editeur ou un redacteur
+        // méthode alternative à la méthode denyAccesUnlessGaranted
+        // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
+            // throw new AccessDeniedException();
+            // genere une erreur 404
+            // throw $this->createNotFoundException('The product does not exist');
+        // }
+
+        if (!$this->isGranted('ROLE_EDITOR')&& $this->isGranted('ROLE_WRITER')){
+            $user = $this->getUser();
+            $writer = $this->writerRepository->findByUser($user);
+            $articles = $writer->getArticles();
+            if (!$articles->contains($article)){
+                // le redeacteur c'est pas le proprietaire de l'article
                 throw new AccessDeniedException();
+                // genere une erreur 404
+                // throw $this->createNotFoundException('The product does not exist');
             }
         }
 
@@ -96,11 +115,28 @@ class AdminArticleController extends AbstractController
     #[Route('/{id}/edit', name: 'app_admin_article_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Article $article, ArticleRepository $articleRepository): Response
     {
+        // les utilisateur non identifier sont renvoyé a la page de login
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
+
+        // méthode alternative à la méthode denyAccesUnlessGaranted
+        // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
+        //     throw new AccessDeniedException();
+        // }
+
+        if (!$this->isGranted('ROLE_EDITOR')&& $this->isGranted('ROLE_WRITER')){
+            $user = $this->getUser();
+            $writer = $this->writerRepository->findByUser($user);
+            $articles = $writer->getArticles();
+            if (!$articles->contains($article)){
+                // le redeacteur c'est pas le proprietaire de l'article
+                throw new AccessDeniedException();
+                // genere une erreur 404
+                // throw $this->createNotFoundException('The product does not exist');
+            }
+        }
+
         $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
-
-        // les utilisateur non identifier sont renvoyé a la page de login
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         if ($form->isSubmitted() && $form->isValid()) {
             $articleRepository->add($article, true);
@@ -117,6 +153,26 @@ class AdminArticleController extends AbstractController
     #[Route('/{id}', name: 'app_admin_article_delete', methods: ['POST'])]
     public function delete(Request $request, Article $article, ArticleRepository $articleRepository): Response
     {
+        // les utilisateur non identifier sont renvoyé a la page de login
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
+
+        // méthode alternative à la méthode denyAccesUnlessGaranted
+        // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
+        //     throw new AccessDeniedException();
+        // }
+
+        if (!$this->isGranted('ROLE_EDITOR')&& $this->isGranted('ROLE_WRITER')){
+            $user = $this->getUser();
+            $writer = $this->writerRepository->findByUser($user);
+            $articles = $writer->getArticles();
+            if (!$articles->contains($article)){
+                // le redeacteur c'est pas le proprietaire de l'article
+                throw new AccessDeniedException();
+                // genere une erreur 404
+                // throw $this->createNotFoundException('The product does not exist');
+            }
+        }
+
         if ($this->isCsrfTokenValid('delete'.$article->getId(), $request->request->get('_token'))) {
             $articleRepository->remove($article, true);
         }
