@@ -86,8 +86,6 @@ class ArticleType extends AbstractType
                 // 'multiple' => true,
                 'expanded' => true,
 
-                'by_reference' => false,
-
                 'query_builder' => function (EntityRepository $er) {
                     return $er->createQueryBuilder('w')
                         ->join('w.user', 'u')

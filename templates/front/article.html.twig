@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon site - {{article.title}} {% endblock %}
+
+{%block body %}
+<article>
+<h2>{{article.title}}</h2>
+<p>
+Auteur:
+{% if article.writer %}
+{{article.writer.user.email}}
+{% endif %}
+</p>
+<div>
+<p>{{article.body}}</p>
+<p>
+Categorie:
+{{article.category.name}}
+</p>
+<p>
+Tags:
+{% for tag in article.tags %}
+#{{tag.name}}
+{% endfor %}
+</p>
+</div>
+</article>
+{% endblock %}

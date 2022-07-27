@@ -9,12 +9,16 @@
 {% if articles %}
 <ul>
     {% for article in articles %}
-    <li>
-        <a href="">{{ article.title }}</a>
+    <div>
+        <a href="{{path('app_front_article', {'id': article.id})}}">{{ article.title }}</a>
+        <p>{{ article.body }}</p>
         {% if article.writer %}
-        (auteur: {{artcile.writer.user.mail}})
+        {{writer.user.email}}
         {% endif %}
-    </li>
+        {% for tag in article.tags %}
+        #{{tag.name}}
+        {% endfor %}
+    </div>
     {% endfor %}
 </ul>
 {% else %}

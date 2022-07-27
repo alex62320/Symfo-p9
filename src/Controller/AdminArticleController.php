@@ -57,7 +57,7 @@ class AdminArticleController extends AbstractController
         // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
         //     throw new AccessDeniedException();
         // }
-        
+
         if (!$this->isGranted('ROLE_EDITOR')&& !$this->isGranted('ROLE_WRITER')){
             // le redeacteur c'est pas le proprietaire de l'article
             throw new AccessDeniedException();
@@ -85,27 +85,8 @@ class AdminArticleController extends AbstractController
     #[Route('/{id}', name: 'app_admin_article_show', methods: ['GET'])]
     public function show(Article $article): Response
     {
-        // les utilisateur non identifier sont renvoyé a la page de login
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
-
-        // méthode alternative à la méthode denyAccesUnlessGaranted
-        // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
-            // throw new AccessDeniedException();
-            // genere une erreur 404
-            // throw $this->createNotFoundException('The product does not exist');
-        // }
-
-        if (!$this->isGranted('ROLE_EDITOR')&& $this->isGranted('ROLE_WRITER')){
-            $user = $this->getUser();
-            $writer = $this->writerRepository->findByUser($user);
-            $articles = $writer->getArticles();
-            if (!$articles->contains($article)){
-                // le redeacteur c'est pas le proprietaire de l'article
-                throw new AccessDeniedException();
-                // genere une erreur 404
-                // throw $this->createNotFoundException('The product does not exist');
-            }
-        }
+        // appel de la fonction qui filtre les utilisateur
+        $this->filterUser($article);
 
         return $this->render('admin_article/show.html.twig', [
             'article' => $article,
@@ -115,25 +96,7 @@ class AdminArticleController extends AbstractController
     #[Route('/{id}/edit', name: 'app_admin_article_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Article $article, ArticleRepository $articleRepository): Response
     {
-        // les utilisateur non identifier sont renvoyé a la page de login
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
-
-        // méthode alternative à la méthode denyAccesUnlessGaranted
-        // if (!$this->isGranted('IS_AUTHENTICATED_FULLY')){
-        //     throw new AccessDeniedException();
-        // }
-
-        if (!$this->isGranted('ROLE_EDITOR')&& $this->isGranted('ROLE_WRITER')){
-            $user = $this->getUser();
-            $writer = $this->writerRepository->findByUser($user);
-            $articles = $writer->getArticles();
-            if (!$articles->contains($article)){
-                // le redeacteur c'est pas le proprietaire de l'article
-                throw new AccessDeniedException();
-                // genere une erreur 404
-                // throw $this->createNotFoundException('The product does not exist');
-            }
-        }
+        $this->filterUser($article);
 
         $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
@@ -153,6 +116,17 @@ class AdminArticleController extends AbstractController
     #[Route('/{id}', name: 'app_admin_article_delete', methods: ['POST'])]
     public function delete(Request $request, Article $article, ArticleRepository $articleRepository): Response
     {
+        // appel de la fonction qui filtre les utilisateur
+        $this->filterUser($article);
+
+        if ($this->isCsrfTokenValid('delete'.$article->getId(), $request->request->get('_token'))) {
+            $articleRepository->remove($article, true);
+        }
+
+        return $this->redirectToRoute('app_admin_article_index', [], Response::HTTP_SEE_OTHER);
+    }
+    private function filterUser(Article $article)
+    {
         // les utilisateur non identifier sont renvoyé a la page de login
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   
 
@@ -172,11 +146,5 @@ class AdminArticleController extends AbstractController
                 // throw $this->createNotFoundException('The product does not exist');
             }
         }
-
-        if ($this->isCsrfTokenValid('delete'.$article->getId(), $request->request->get('_token'))) {
-            $articleRepository->remove($article, true);
-        }
-
-        return $this->redirectToRoute('app_admin_article_index', [], Response::HTTP_SEE_OTHER);
     }
 }
